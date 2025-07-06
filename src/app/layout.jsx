@@ -3,8 +3,6 @@ import { Roboto } from 'next/font/google'
 import "./globals.css"
 import { Toaster } from "react-hot-toast"
 import ReduxProvider from "@/providers/redux-providers"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
 
 const roboto = Roboto({
   weight: '400',
@@ -25,10 +23,8 @@ export default function RootLayout({
       <body className={roboto.className}>
         <ReduxProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header />
             {children}
             <Toaster />
-            <Footer />
           </ThemeProvider>
         </ReduxProvider>
       </body>

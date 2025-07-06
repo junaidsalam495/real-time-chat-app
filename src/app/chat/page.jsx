@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,22 +23,28 @@ export default function ChatPage() {
   const inputRef = useRef(null);
   const [messages, { isLoading: isLoadingMessage }] = useMessagesMutation();
   const { data } = useGetUsersApiQuery();
-  const { data: getMessages } = useGetMessagesQuery(selectedUser?._id &&
-    { senderId: user?._id, receiverId: selectedUser?._id }, { skip: !selectedUser?._id });
-
+  const { data: getMessages } = useGetMessagesQuery(
+    selectedUser?._id && { senderId: user?._id, receiverId: selectedUser?._id },
+    { skip: !selectedUser?._id }
+  )
 
   const handleSendMessage = async (text) => {
+    if (!text.trim()) return
     try {
-      const response = await messages({ senderId: user?._id, receiverId: selectedUser?._id, text }).unwrap();
-      toast.success(response?.message);
+      const response = await messages({ senderId: user?._id, receiverId: selectedUser?._id, text }).unwrap()
+      toast.success(response?.message)
     } catch (err) {
-      toast.error(err?.data?.message || "Something went wrong");
+      toast.error(err?.data?.message || "Something went wrong")
     }
   }
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [getMessages]);
+
   return (
-    <div className="flex h-full flex-col md:flex-row">
-      <div className={`block w-full md:w-80 border-r bg-background px-3 space-y-4 mt-4`}>
+    <div className="flex h-screen flex-col md:flex-row">
+      <div className="block w-full md:w-80 border-r bg-background px-3 space-y-4 mt-4">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search or start a new chat" className="pl-8" />
@@ -50,29 +56,36 @@ export default function ChatPage() {
         </div>
 
         <ScrollArea className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]">
-          {data?.users?.map((user) => (
-            <div
-              key={user?._id}
-              className={`flex items-center gap-3 mb-3 rounded-md p-3 cursor-pointer bg-accent`}
-              onClick={() => setSelectedUser(user)}
-            >
-              <Avatar>
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                <AvatarFallback>{user?.name?.substring(0, 2)?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <p className="font-medium truncate">{user?.name}</p>
-                  <span className="text-xs text-muted-foreground">{user?.lastMessageTime || 12}</span>
+          {data?.users?.filter((u) => u._id !== user?._id)?.map((user) => (
+              <div
+                key={user?._id}
+                className={`flex items-center gap-3 mb-3 rounded-md p-3 cursor-pointer bg-accent`}
+                onClick={() => setSelectedUser(user)}
+              >
+                <Avatar>
+                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                  <AvatarFallback>{user?.name?.substring(0, 2)?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center">
+                    <p className="font-medium truncate">{user?.name}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(user?.createdAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">{user?.lastMessage || "Hello"}</p>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">{user?.lastMessage || "Hello"}</p>
               </div>
-            </div>
-          ))}
+            ))}
         </ScrollArea>
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {selectedUser ? (
           <>
             <div className="flex items-center justify-between p-3 border-b">
@@ -111,36 +124,38 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1 p-4">
-              {getMessages?.data?.map((message) => (
-                <div
-                  key={message?._id}
-                  className={`flex mb-4 ${message?.senderId === user?._id ? "justify-end" : "justify-start"}`}
-                >
+            <ScrollArea className="flex-1 overflow-y-auto p-4">
+              <div className="flex flex-col space-y-4">
+                {getMessages?.data?.map((message) => (
                   <div
-                    className={`max-w-[70%] rounded-lg p-3 ${message?.senderId === user?._id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                      }`}
+                    key={message?._id}
+                    className={`flex ${message?.senderId === user?._id ? "justify-end" : "justify-start"}`}
                   >
-                    <p>{message?.text}</p>
-                    <p
-                      className={`text-xs mt-1 ${message?.senderId === user?._id
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
+                    <div
+                      className={`max-w-[70%] rounded-lg p-3 ${message?.senderId === user?._id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
                         }`}
                     >
-                      {new Date(message?.createdAt).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                      <p>{message?.text}</p>
+                      <p
+                        className={`text-xs mt-1 ${message?.senderId === user?._id
+                          ? "text-primary-foreground/70"
+                          : "text-muted-foreground"
+                          }`}
+                      >
+                        {new Date(message?.createdAt).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
             </ScrollArea>
 
             <div className="p-3 border-t">
@@ -167,8 +182,8 @@ export default function ChatPage() {
                   disabled={isLoadingMessage}
                   onClick={() => {
                     if (inputRef.current) {
-                      handleSendMessage(inputRef.current.value);
-                      inputRef.current.value = "";
+                      handleSendMessage(inputRef.current.value)
+                      inputRef.current.value = ""
                     }
                   }}
                 >
@@ -178,7 +193,6 @@ export default function ChatPage() {
                     <SendHorizonal className="h-5 w-5" />
                   )}
                 </Button>
-
               </div>
             </div>
           </>
@@ -196,4 +210,3 @@ export default function ChatPage() {
     </div>
   )
 }
-
