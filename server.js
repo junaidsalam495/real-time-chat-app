@@ -22,7 +22,17 @@ app.prepare().then(() => {
 
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
+
+        socket.on("sendMessage", (data) => {
+            console.log("Message sent:", data);
+            io.emit("newMessage", data);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("User disconnected:", socket.id);
+        });
     });
+
 
     server.listen(3000, (err) => {
         if (err) throw err
