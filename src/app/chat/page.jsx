@@ -18,7 +18,7 @@ import { useGetMessagesQuery, useMessagesMutation } from "@/services/messagesApi
 import { useSelector } from "react-redux"
 
 // const socket = io("http://localhost:3000");
-const socket = io("https://real-time-chat-app-eight-sooty.vercel.app");
+const socket = io("https://incandescent-quokka-1e99ee.netlify.app");
 
 export default function ChatPage() {
   const [selectedUser, setSelectedUser] = useState(null)
