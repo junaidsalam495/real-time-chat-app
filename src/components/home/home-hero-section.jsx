@@ -1,9 +1,24 @@
+"use client"
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button } from '../ui/button'
 import { MessageCircle, Shield, Zap } from 'lucide-react'
+import { io } from 'socket.io-client'
 
 const HomeHeroSection = () => {
+
+  useEffect(() => {
+    const socket = io("http://localhost:3000")
+
+    socket.on("connect", () => {
+      console.log("Connected to socket:", socket.id);
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
+
   return (
     <>
       <section className="container mx-auto py-24 md:py-32 space-y-8">
