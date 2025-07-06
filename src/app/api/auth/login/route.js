@@ -17,7 +17,7 @@ export async function POST(request) {
         email: user.email,
         name: user.name,
       },
-      process.env.JWT_SECRET,
+      "DAJSDBSJABDJSABDSABDNASBDNSABDNSBANDBASNDBNASMBDNSABNDBASNM",
     );
     return NextResponse.json({
       message: "Your account has been login successfully.",
