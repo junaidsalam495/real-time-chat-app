@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '../ui/button'
 import { MessageCircle, Shield, Zap } from 'lucide-react'
 import socket from '@/socket/socket'
+import { useEffect } from 'react'
 
 const HomeHeroSection = () => {
 
