@@ -23,10 +23,10 @@ app.prepare().then(() => {
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
 
-        socket.on("sendMessage", (data) => {
-            console.log("Message sent:", data);
-            io.emit("newMessage", data);
-        });
+        socket.on("sendMessage", (message) => {
+            console.log("Message sent:", message);
+            io.emit("newMessage" , message);
+        })
 
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);
@@ -38,4 +38,3 @@ app.prepare().then(() => {
         console.log("> Ready on http://localhost:3000")
     })
 });
-

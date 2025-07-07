@@ -1,6 +1,5 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
-import io from "socket.io-client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,32 +15,20 @@ import toast from "react-hot-toast"
 import { useGetUsersApiQuery } from "@/services/usersApi"
 import { useGetMessagesQuery, useMessagesMutation } from "@/services/messagesApi"
 import { useSelector } from "react-redux"
-
-// const socket = io("http://localhost:3000");
-const socket = io("https://incandescent-quokka-1e99ee.netlify.app");
+import socket from "@/socket/socket"
 
 export default function ChatPage() {
+  const [allMessages, setAllMessages] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const { user } = useSelector((state) => state.auth)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const [messages, { isLoading: isLoadingMessage }] = useMessagesMutation()
-  const { data } = useGetUsersApiQuery()
+  const { data } = useGetUsersApiQuery();
   const { data: getMessages } = useGetMessagesQuery(
     selectedUser?._id && { senderId: user?._id, receiverId: selectedUser?._id },
     { skip: !selectedUser?._id }
-  )
-  const [allMessages, setAllMessages] = useState([])
-
-  useEffect(() => {
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id)
-    })
-
-    return () => {
-      socket.disconnect()
-    }
-  }, [])
+  );
 
   useEffect(() => {
     if (getMessages?.data) {
@@ -56,34 +43,33 @@ export default function ChatPage() {
         (message.senderId === user?._id && message.receiverId === selectedUser?._id)
       ) {
         setAllMessages((prev) => [...prev, message])
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
       }
     })
     return () => {
       socket.off("newMessage")
     }
-  }, [selectedUser, user]);
+  }, [selectedUser]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [allMessages]);
 
   const handleSendMessage = async (text) => {
     if (!text.trim()) return
-
     const payload = {
       senderId: user?._id,
       receiverId: selectedUser?._id,
       text,
     }
-
     try {
-      const res = await messages(payload).unwrap()
+      const res = await messages(payload).unwrap();
       const newMsg = {
         ...payload,
         createdAt: new Date().toISOString(),
         _id: res?.data?._id || Date.now(),
       }
       socket.emit("sendMessage", newMsg)
-      setAllMessages((prev) => [...prev, newMsg])
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-      toast.success(res?.message)
+      toast.success(res?.message);
     } catch (err) {
       toast.error(err?.data?.message || "Something went wrong")
     }
