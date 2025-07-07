@@ -15,17 +15,21 @@ app.prepare().then(() => {
 
     const io = new Server(server, {
         cors: {
-            origin: "*",
+            origin: [
+                "http://localhost:3000",
+                "https://real-time-chat-app-eight-sooty.vercel.app",
+            ],
             methods: ["GET", "POST"],
+            credentials: true,
         },
-    })
+    });
 
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
 
         socket.on("sendMessage", (message) => {
             console.log("Message sent:", message);
-            io.emit("newMessage" , message);
+            io.emit("newMessage", message);
         })
 
         socket.on("disconnect", () => {
